@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+  <body>
+    <script>
+      console.log(`Program to see if  student has passed or failed`);
+      alert(`This is a small program to see if a learner has passed or failed`);
+      let continueRunning = true;
+
+      //Enter your name
+      let yourName = prompt(`Please enter your name👨🏾‍🏫/👩🏾‍🏫: `);
+      while (yourName !== null && yourName.trim() === "") {
+        alert(`You name cannot be left blank`);
+        yourName = prompt(`Please enter your name👨🏾‍🏫/👩🏾‍🏫: `);
+      }
+
+      //If you want to exit right away
+      if (yourName === null) {
+        alert(`Goodbye`);
+        continueRunning = false;
+      }
+
+      while (continueRunning) {
+        //Enter the learner's name
+        let learnerName = prompt(`Please enter the learner's name👨🏾‍🎓/👩🏾‍🎓: `);
+        while (learnerName !== null && learnerName.trim() === "") {
+          alert(`The learner's name cannot be left blank`);
+          learnerName = prompt(`Please enter the learner's name👨🏾‍🎓/👩🏾‍🎓: `);
+        }
+        //Enter the learner's grades
+        let grades = prompt(
+          `Please enter the learner's grades (or type 'exit' to quit)😊: `,
+        );
+        while (grades !== null && grades.trim() === "") {
+          alert(
+            `Dear ${yourName}, the learner's grades cannot be left blank👎🏾`,
+          );
+          grades = prompt(
+            `Please enter the learner's grades (or type 'exit' to quit)😊: `,
+          );
+        }
+        //Does the user want to exit the program?
+        if (grades === null || grades.toLowerCase() === `exit`) {
+          continueRunning = false;
+          alert(`Thank you for your time you are now exiting the program 👋🏾`);
+          break;
+        }
+
+        const number = Number(grades);
+
+        //check if the number is a valid finite number
+        if (Number.isFinite(number)) {
+          //If it is indeed finite do the following:
+          if (number > 89) {
+            alert(
+              `😀 Well done! Mr/Ms/Dr ${yourName}, ${learnerName} has passed with an A grade of ${number}%`,
+            );
+          } else if (number > 79) {
+            alert(
+              `🙂 Hello Mr/Ms/Dr ${yourName}, ${learnerName} has passed with a B grade of ${number}%.`,
+            );
+          } else if (number > 69) {
+            alert(
+              `😒 Hello Mr/Ms/Dr ${yourName}, ${learnerName} has passed with a C grade of ${number}%.`,
+            );
+          } else if (number > 59) {
+            alert(
+              `🤨 Hello Mr/Ms/Dr ${yourName}, ${learnerName} has passed with a D grade of ${number}%, ${learnerName} should try harder`,
+            );
+          } else if (number > 49) {
+            alert(
+              `😮‍💨 Hello Mr/Ms/Dr ${yourName}, ${learnerName} has barely passed with a E grade of ${number}%`,
+            );
+          } else {
+            alert(
+              `Sorry 😥 I believe, ${yourName}, the learner has failed with ${number}% which is an F`,
+            );
+          }
+        } else {
+          //This happens if the number is not finite
+          alert(
+            `"${grades}" is not a valid (finite) number. Please try again.😔`,
+          );
+        }
+      }
+    </script>
+  </body>
+</html>

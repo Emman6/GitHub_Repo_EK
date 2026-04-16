@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sum of Positive Numbers</title>
+  </head>
+  <body>
+    <h1>The Sum of Positive Numbers</h1>
+    <hr />
+    <script>
+      let sum = 0,
+        num = 0;
+
+      do {
+        sum += num; //add 1 to each sum. Sum stats at 0
+        num = parseInt(prompt("😀Please enter a number:")); //take input from a user as a number
+      } while (num >= 0);
+      alert(`The sum is ${sum}`); //show the sum
+    </script>
+  </body>
+</html>

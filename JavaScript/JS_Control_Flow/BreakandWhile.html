@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Break and While</title>
+  </head>
+  <body>
+    <h1>Break and While</h1>
+    <script>
+      //Break and while Loop
+      let sum = 0;
+
+      while (true) {
+        let num = Number(prompt("Please enter a number:")); // user enters a number
+        if (num < 0) {
+          //break if the nmber becomes negative
+          break;
+        } else {
+          sum += num;
+        }
+        alert(`Sum: ${sum}`);
+      }
+    </script>
+  </body>
+</html>
