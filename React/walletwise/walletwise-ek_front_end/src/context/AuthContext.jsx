@@ -1,48 +1,56 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
-// Initialize context
+// Create the context to share authentication state across the app
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // 1. STATE MANAGEMENT
+  // ── STATE MANAGEMENT ──
+  // isAuthenticated: Tracks if the user is logged in
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
-  // New state to hold the specific user data (like their role)
+  // user: Stores the details (email, username, role) of the logged-in individual
   const [user, setUser] = useState(null);
+  // loading: Ensures the app doesn't redirect before checking LocalStorage
+  const [loading, setLoading] = useState(true);
 
-  // 2. AUTHENTICATION METHODS
-  const login = (token, email) => {
-    setIsAuthenticated(true);
+  // ── PERSISTENCE CHECK ──
+  // This runs once when the app starts to see if a user was already logged in
+  useEffect(() => {
+    const savedToken = localStorage.getItem('walletwise_token');
+    const savedUser = localStorage.getItem('walletwise_current_user');
     
-    // BACKEND SIMULATION:
-    // In a full application, the backend API would send back the user's role 
-    // inside the decoded JWT token. For now, we simulate this by checking the email.
-    let assignedRole = 'User';
-    if (email.includes('admin')) {
-      assignedRole = 'Admin';
+    if (savedToken && savedUser) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(savedUser));
     }
+    setLoading(false);
+  }, []);
 
-    setUser({
-      email: email,
-      role: assignedRole
-    });
+  // ── LOGIN METHOD ──
+  // I updated this to accept one 'userData' object to match Login.jsx
+  const login = (userData) => {
+    setIsAuthenticated(true);
+    setUser(userData);
     
-    // Persist token in local storage so it survives page reloads
-    localStorage.setItem('authToken', token);
+    // Save to LocalStorage so the user stays logged in after a refresh
+    localStorage.setItem('walletwise_token', 'session_' + Date.now());
+    localStorage.setItem('walletwise_current_user', JSON.stringify(userData));
   };
 
+  // ── LOGOUT METHOD ──
   const logout = () => {
     setIsAuthenticated(false);
     setUser(null);
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('walletwise_token');
+    localStorage.removeItem('walletwise_current_user');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
-      {children}
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, loading }}>
+      {/* We only render the app once the persistence check is done */}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
 
-// Custom hook to consume the auth context easily
+// Custom hook for easy access to auth data in other components
 export const useAuth = () => useContext(AuthContext);

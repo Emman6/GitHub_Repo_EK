@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Box, Typography, TextField, Button, Stack, Alert, 
-  CircularProgress, Paper, Divider, Grid
+  CircularProgress, Paper, Grid
 } from '@mui/material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import LockIcon from '@mui/icons-material/Lock';
@@ -10,87 +10,92 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useAuth } from '../context/AuthContext';
 import Footer from '../components/Footer';
 
-// ── DESIGN SYSTEM ──
-const WW = {
-  teal: '#084D4D',
-  tealDark: '#063a3a',
-  white: '#FFFFFF',
+// ── BRANDING CONSTANTS ──
+const WW_THEME = {
+  teal: '#0D6E6E',
+  tealDark: '#094E4E',
+  bg: '#F4F7F6'
 };
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth(); 
+  const { login } = useAuth(); // Consuming the login function from AuthContext
 
-  // ── STATE MANAGEMENT ──
+  // ── LOCAL STATE ──
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Handle input changes dynamically for all fields
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ── LOGIN LOGIC (INTEGRATED WITH LOCALSTORAGE) ──
+  // ── FORM SUBMISSION ──
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // I am simulating a short network delay for a professional feel
+    // Simulate a brief delay for a professional "processing" feel
     setTimeout(() => {
       try {
-        // 1. Retrieve the users registered in Register.jsx
-        const savedUsers = JSON.parse(localStorage.getItem('walletwise_users') || '[]');
+        // 1. Fetch the registered users list from LocalStorage
+        const rawData = localStorage.getItem('walletwise_users');
+        const savedUsers = rawData ? JSON.parse(rawData) : [];
 
-        // 2. Search for a matching user
-        const userMatch = savedUsers.find(
-          (u) => u.email === formData.email && u.password === formData.password
+        // 2. SEARCH: Find the user with matching email and password
+        // Using toLowerCase on email to prevent login failures due to capitalization
+        const foundUser = savedUsers.find(
+          (u) => u.email.toLowerCase() === formData.email.toLowerCase() && 
+                 u.password === formData.password
         );
 
-        if (userMatch) {
-          // SUCCESS: Log the user in and redirect to dashboard
-          login(userMatch); 
+        if (foundUser) {
+          // 3. INTEGRATION: Pass the whole user object to the Auth Provider
+          login(foundUser); 
+          // 4. NAVIGATION: Move to the dashboard once authenticated
           navigate('/dashboard');
         } else {
-          // FAILURE: Credentials don't match our "database"
-          setError('Invalid email or password. Please register first.');
+          // If no match, stop the spinner and show an error
+          setError('Invalid credentials. Please check your email/password or Register.');
           setLoading(false);
         }
       } catch (err) {
-        setError('An error occurred during login. Please try again.');
+        // Catch-all for unexpected code crashes
+        console.error("Login Error Details:", err);
+        setError('A system error occurred. Please clear your site data and try again.');
         setLoading(false);
       }
-    }, 1200); 
+    }, 1000); 
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#F4F7F6' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: WW_THEME.bg }}>
       <Grid container sx={{ flex: 1 }}>
-        {/* LEFT SIDE: BRANDING */}
+        
+        {/* LEFT PANEL: WELCOME MESSAGE */}
         <Grid item xs={12} md={6} sx={{ 
-          bgcolor: WW.teal, color: 'white', display: 'flex', 
+          bgcolor: WW_THEME.teal, color: 'white', display: 'flex', 
           flexDirection: 'column', justifyContent: 'center', p: { xs: 4, md: 8 } 
         }}>
           <Stack spacing={2}>
             <AccountBalanceWalletIcon sx={{ fontSize: 60, mb: 2 }} />
             <Typography variant="h3" fontWeight={900}>WalletWise</Typography>
-            <Typography variant="h6" sx={{ opacity: 0.8, maxWidth: 450 }}>
-              Master your finances with our integrated tracking system.
+            <Typography variant="h6" sx={{ opacity: 0.8 }}>
+              Smart financial stewardship through integrated tracking.
             </Typography>
-            <Box sx={{ mt: 4 }}>
-              <Typography variant="body1" sx={{ mb: 1 }}>• Real-time balance updates</Typography>
-              <Typography variant="body1" sx={{ mb: 1 }}>• Secure LocalStorage data persistence</Typography>
-              <Typography variant="body1">• Detailed financial reporting</Typography>
-            </Box>
           </Stack>
         </Grid>
 
-        {/* RIGHT SIDE: LOGIN FORM */}
+        {/* RIGHT PANEL: INTERACTIVE LOGIN FORM */}
         <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
           <Paper elevation={0} sx={{ p: 4, width: '100%', maxWidth: 400, borderRadius: 4, border: '1px solid #eee' }}>
-            <Typography variant="h5" fontWeight={800} mb={1} color={WW.teal}>Welcome Back</Typography>
-            <Typography variant="body2" color="text.secondary" mb={4}>Login to access your dashboard</Typography>
-
+            <Typography variant="h5" fontWeight={800} color={WW_THEME.teal} gutterBottom>
+              Secure Sign-In
+            </Typography>
+            
+            {/* Conditional Error Display */}
             {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
             <form onSubmit={handleSubmit}>
@@ -103,9 +108,7 @@ export default function Login() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  InputProps={{
-                    startAdornment: <PersonIcon sx={{ mr: 1, color: WW.teal, opacity: 0.7 }} />
-                  }}
+                  placeholder="Enter your registered email"
                 />
                 <TextField
                   name="password"
@@ -115,9 +118,7 @@ export default function Login() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  InputProps={{
-                    startAdornment: <LockIcon sx={{ mr: 1, color: WW.teal, opacity: 0.7 }} />
-                  }}
+                  placeholder="Enter your password"
                 />
                 <Button 
                   type="submit" 
@@ -125,21 +126,22 @@ export default function Login() {
                   fullWidth 
                   size="large" 
                   disabled={loading}
-                  sx={{ bgcolor: WW.teal, py: 1.5, borderRadius: 2, fontWeight: 'bold', '&:hover': { bgcolor: WW.tealDark } }}
+                  sx={{ 
+                    bgcolor: WW_THEME.teal, 
+                    py: 1.5, 
+                    fontWeight: 'bold', 
+                    '&:hover': { bgcolor: WW_THEME.tealDark } 
+                  }}
                 >
-                  {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+                  {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Access Dashboard'}
                 </Button>
               </Stack>
             </form>
 
-            <Divider sx={{ my: 4 }}>
-              <Typography variant="caption" color="text.secondary">OR</Typography>
-            </Divider>
-
-            <Typography variant="body2" textAlign="center">
-              New here?{' '}
-              <RouterLink to="/register" style={{ color: WW.teal, fontWeight: 'bold', textDecoration: 'none' }}>
-                Register your account
+            <Typography variant="body2" textAlign="center" sx={{ mt: 4 }}>
+              Don't have an account?{' '}
+              <RouterLink to="/register" style={{ color: WW_THEME.teal, fontWeight: 'bold', textDecoration: 'none' }}>
+                Register Here
               </RouterLink>
             </Typography>
           </Paper>
