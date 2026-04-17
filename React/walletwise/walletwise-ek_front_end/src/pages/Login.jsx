@@ -12,9 +12,8 @@ import Footer from '../components/Footer';
 
 // ── DESIGN SYSTEM ──
 const WW = {
-  teal: '#0D6E6E',
-  tealDark: '#094E4E',
-  tealLight: '#E0F2F1',
+  teal: '#084D4D',
+  tealDark: '#063a3a',
   white: '#FFFFFF',
 };
 
@@ -31,58 +30,57 @@ export default function Login() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ── LOGIN LOGIC (LOCALSTORAGE APPROACH) ──
+  // ── LOGIN LOGIC (INTEGRATED WITH LOCALSTORAGE) ──
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    setLoading(true);
 
-    // I am simulating a network delay to make the UI feel realistic
+    // I am simulating a short network delay for a professional feel
     setTimeout(() => {
-      // 1. Retrieve the users registered via the Register.jsx page
-      const savedUsers = JSON.parse(localStorage.getItem('walletwise_users') || '[]');
+      try {
+        // 1. Retrieve the users registered in Register.jsx
+        const savedUsers = JSON.parse(localStorage.getItem('walletwise_users') || '[]');
 
-      // 2. Search for a user with matching email and password
-      const userMatch = savedUsers.find(
-        (u) => u.email === formData.email && u.password === formData.password
-      );
+        // 2. Search for a matching user
+        const userMatch = savedUsers.find(
+          (u) => u.email === formData.email && u.password === formData.password
+        );
 
-      if (userMatch) {
-        // SUCCESS: Passing the user data to our global AuthContext
-        login(userMatch);
-        navigate('/dashboard');
-      } else if (formData.email === 'admin@wallet.com' && formData.password === 'admin123') {
-        // FALLBACK: Hardcoded admin for your testing convenience
-        login({ username: 'Admin User', email: 'admin@wallet.com', role: 'Admin' });
-        navigate('/dashboard');
-      } else {
-        // FAILURE: Show error if no match is found on the "disk"
-        setError('Invalid email or password. Please try again.');
+        if (userMatch) {
+          // SUCCESS: Log the user in and redirect to dashboard
+          login(userMatch); 
+          navigate('/dashboard');
+        } else {
+          // FAILURE: Credentials don't match our "database"
+          setError('Invalid email or password. Please register first.');
+          setLoading(false);
+        }
+      } catch (err) {
+        setError('An error occurred during login. Please try again.');
         setLoading(false);
       }
-    }, 1000); 
+    }, 1200); 
   };
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#F4F7F6' }}>
       <Grid container sx={{ flex: 1 }}>
-        {/* LEFT SIDE: BRANDING & WELCOME */}
+        {/* LEFT SIDE: BRANDING */}
         <Grid item xs={12} md={6} sx={{ 
           bgcolor: WW.teal, color: 'white', display: 'flex', 
           flexDirection: 'column', justifyContent: 'center', p: { xs: 4, md: 8 } 
         }}>
-          <Stack spacing={2} alignItems="flex-start">
+          <Stack spacing={2}>
             <AccountBalanceWalletIcon sx={{ fontSize: 60, mb: 2 }} />
             <Typography variant="h3" fontWeight={900}>WalletWise</Typography>
             <Typography variant="h6" sx={{ opacity: 0.8, maxWidth: 450 }}>
               Master your finances with our integrated tracking system.
             </Typography>
             <Box sx={{ mt: 4 }}>
-              {['Real-time tracking', 'Detailed reports', 'Secure local storage'].map((text) => (
-                <Typography key={text} variant="body1" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  • {text}
-                </Typography>
-              ))}
+              <Typography variant="body1" sx={{ mb: 1 }}>• Real-time balance updates</Typography>
+              <Typography variant="body1" sx={{ mb: 1 }}>• Secure LocalStorage data persistence</Typography>
+              <Typography variant="body1">• Detailed financial reporting</Typography>
             </Box>
           </Stack>
         </Grid>
@@ -91,7 +89,7 @@ export default function Login() {
         <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
           <Paper elevation={0} sx={{ p: 4, width: '100%', maxWidth: 400, borderRadius: 4, border: '1px solid #eee' }}>
             <Typography variant="h5" fontWeight={800} mb={1} color={WW.teal}>Welcome Back</Typography>
-            <Typography variant="body2" color="text.secondary" mb={4}>Enter your credentials to access your dashboard</Typography>
+            <Typography variant="body2" color="text.secondary" mb={4}>Login to access your dashboard</Typography>
 
             {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
@@ -139,9 +137,9 @@ export default function Login() {
             </Divider>
 
             <Typography variant="body2" textAlign="center">
-              New to the system?{' '}
+              New here?{' '}
               <RouterLink to="/register" style={{ color: WW.teal, fontWeight: 'bold', textDecoration: 'none' }}>
-                Register here
+                Register your account
               </RouterLink>
             </Typography>
           </Paper>
