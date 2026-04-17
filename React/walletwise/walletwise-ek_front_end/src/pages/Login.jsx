@@ -133,7 +133,7 @@ export default function Login() {
                     '&:hover': { bgcolor: WW_THEME.tealDark } 
                   }}
                 >
-                  {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Access Dashboard'}
+                  {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Login'}
                 </Button>
               </Stack>
             </form>
