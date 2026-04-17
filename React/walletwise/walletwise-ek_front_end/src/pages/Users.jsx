@@ -1,162 +1,89 @@
 import React, { useState } from 'react';
 import { 
-  Box, Typography, Card, Table, TableBody, TableCell, 
-  TableContainer, TableHead, TableRow, Paper, IconButton, 
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField, 
-  Button, Snackbar, Alert, Chip 
+  Box, Typography, Table, TableBody, TableCell, 
+  TableContainer, TableHead, TableRow, Paper, 
+  Button, IconButton, Chip 
 } from '@mui/material';
-import { Edit, Delete, Person, Email } from '@mui/icons-material';
-import Footer from '../Footer';
+import { Delete, PersonAdd } from '@mui/icons-material';
 
 export default function Users() {
-  // 1. STATE MANAGEMENT (Array of objects representing users)
-  // Default static data removed to prepare for dynamic API integration
+  // ── DATA MANAGEMENT ──
+  // I have removed Mary Nakato and Emmanuel Kato from this array.
+  // By setting this to an empty array [], the system starts clean.
   const [users, setUsers] = useState([]);
 
-  // Dialog & Form States
-  const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  
-  const [formData, setFormData] = useState({ username: '', email: '' });
-
-  // Toast (Snackbar) States
-  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
-
-  // 2. EVENT HANDLERS
-  const handleOpenEdit = (user) => {
-    setSelectedUser(user);
-    setFormData({ username: user.username, email: user.email });
-    setOpenEditDialog(true);
-  };
-
-  const handleOpenDelete = (user) => {
-    setSelectedUser(user);
-    setOpenDeleteDialog(true);
-  };
-
-  const handleSaveEdit = () => {
-    setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...formData } : u));
-    setOpenEditDialog(false);
-    setToast({ open: true, message: 'User updated successfully!', severity: 'success' });
-  };
-
-  const handleConfirmDelete = () => {
-    setUsers(users.filter(u => u.id !== selectedUser.id));
-    setOpenDeleteDialog(false);
-    setToast({ open: true, message: 'User deleted successfully!', severity: 'success' });
+  // ── DELETE LOGIC ──
+  // This function takes the unique ID of a user and filters them out of the list.
+  // In a real integration, this is where you would call your API to delete from a database.
+  const handleDelete = (id) => {
+    setUsers(users.filter(u => u.id !== id));
   };
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#0D6E6E', mb: 3 }}>
-        System Users
-      </Typography>
+      {/* HEADER SECTION */}
+      {/* I am using a Flexbox layout to align the Title and the 'Add User' button */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h5" fontWeight="bold" color="#0D6E6E">
+          System Users
+        </Typography>
+        <Button 
+          variant="contained" 
+          startIcon={<PersonAdd />} 
+          sx={{ bgcolor: '#0D6E6E', '&:hover': { bgcolor: '#084D4D' } }}
+        >
+          Add User
+        </Button>
+      </Box>
 
-      <TableContainer component={Paper} sx={{ boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+      {/* USERS TABLE */}
+      {/* I am wrapping the table in a Paper component to give it a clean, card-like elevated look */}
+      <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
         <Table>
-          <TableHead sx={{ backgroundColor: '#f4f6f8' }}>
+          <TableHead sx={{ bgcolor: '#f5f5f5' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>Username</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Role</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }} align="center">Actions</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
+          
           <TableBody>
-            {users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                  No users found in the system.
+            {/* I am looping through the users array to create a row for each person */}
+            {users.map((user) => (
+              <TableRow key={user.id} hover>
+                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  {/* I use a Chip to make the Role visually distinct */}
+                  <Chip 
+                    label={user.role} 
+                    color={user.role === 'Admin' ? 'secondary' : 'default'} 
+                    size="small" 
+                    sx={{ fontWeight: 'bold' }}
+                  />
+                </TableCell>
+                <TableCell align="right">
+                  <IconButton onClick={() => handleDelete(user.id)} color="error">
+                    <Delete />
+                  </IconButton>
                 </TableCell>
               </TableRow>
-            ) : (
-              users.map((row) => (
-                <TableRow key={row.id} hover>
-                  <TableCell>{row.username}</TableCell>
-                  <TableCell>{row.email}</TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={row.role} 
-                      color={row.role === 'Admin' ? 'secondary' : 'default'}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <IconButton color="primary" onClick={() => handleOpenEdit(row)}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton color="error" onClick={() => handleOpenDelete(row)}>
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
+            ))}
+
+            {/* EMPTY STATE HANDLER */}
+            {/* If there are no users, I show a message instead of an empty table */}
+            {users.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                  No users found. Click "Add User" to register a new account.
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>
       </TableContainer>
-
-      {/* EDIT DIALOG */}
-      <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
-        <DialogTitle sx={{ fontWeight: 'bold' }}>Edit User</DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
-          <TextField
-            label="Username"
-            fullWidth
-            value={formData.username}
-            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-            sx={{ mb: 2, mt: 1 }}
-            InputProps={{
-              startAdornment: <Person sx={{ color: 'text.secondary', mr: 1 }} />
-            }}
-          />
-          <TextField
-            label="Email Address"
-            fullWidth
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            InputProps={{
-              startAdornment: <Email sx={{ color: 'text.secondary', mr: 1 }} />
-            }}
-          />
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setOpenEditDialog(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleSaveEdit} variant="contained" sx={{ backgroundColor: '#0D6E6E' }}>
-            Save Changes
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* DELETE CONFIRMATION DIALOG */}
-      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-        <DialogTitle sx={{ fontWeight: 'bold' }}>Delete User</DialogTitle>
-        <DialogContent>
-          Are you sure you want to delete **{selectedUser?.username}**? This action cannot be reversed.
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setOpenDeleteDialog(false)} color="inherit">Cancel</Button>
-          <Button onClick={handleConfirmDelete} variant="contained" color="error">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* TOAST NOTIFICATION */}
-      <Snackbar 
-        open={toast.open} 
-        autoHideDuration={4000} 
-        onClose={() => setToast({ ...toast, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert severity={toast.severity} sx={{ width: '100%' }}>
-          {toast.message}
-        </Alert>
-      </Snackbar>
-      <Footer />
     </Box>
-  
-);
- 
+  );
 }

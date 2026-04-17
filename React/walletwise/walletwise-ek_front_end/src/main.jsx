@@ -1,15 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import AppRouter from './AppRouter';
-import './index.css';
+import { BrowserRouter as Router } from 'react-router-dom';
+import App from './App';
 
-// 1. Target the 'root' div in our index.html file
-const rootElement = document.getElementById('root');
-
-// 2. Create the React root and render our AppRouter inside it
-ReactDOM.createRoot(rootElement).render(
+// I am initializing the application at the root element.
+// By wrapping <App /> in <Router> here, I ensure that every 
+// component in the tree has access to routing logic.
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* AppRouter handles all our page routing and navigation */}
-    <AppRouter />
+    <Router>
+      <App />
+    </Router>
   </React.StrictMode>
 );

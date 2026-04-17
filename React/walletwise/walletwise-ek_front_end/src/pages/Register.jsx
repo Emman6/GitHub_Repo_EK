@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Box, Grid, Typography, TextField, Button, Link, Card, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { 
+  Box, Grid, Typography, TextField, Button, Link, 
+  Card, FormControl, InputLabel, Select, MenuItem, Alert 
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import Footer from '../Footer';
+import Footer from '../components/Footer';
 
 export default function Register() {
   const navigate = useNavigate();
 
-  // 1. STATE MANAGEMENT
-  // We expand the initial state object to track the user's role and the secret code.
-  // We default the role to 'User' so regular sign-ups remain streamlined.
+  // ── STATE MANAGEMENT ──
   const [formData, setFormData] = useState({ 
     username: '', 
     email: '', 
@@ -16,85 +17,66 @@ export default function Register() {
     role: 'User', 
     secretCode: '' 
   });
+  
+  const [error, setError] = useState('');
 
-  // Event handler to update state dynamically as the user types
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 2. EVENT HANDLERS
+  // ── REGISTRATION LOGIC ──
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // BACKEND SIMULATION (As advised for security):
-    // In a real production application, you would send this entire `formData` payload 
-    // to your Node/Express, Python, or PHP backend via an API call (like fetch or axios).
-    // The backend server would then securely check if the submitted code matches the expected master code.
-    
-    console.log('Registering user with payload:', formData);
+    setError('');
 
-    if (formData.role === 'Admin') {
-      // This check would normally happen securely on your server database side
-      if (formData.secretCode !== '2026') {
-        alert('Invalid Secret Code for Admin Registration!');
-        return; // Stop the execution and prevent registration
-      }
+    // 1. Check Admin Secret (Integration Rule)
+    if (formData.role === 'Admin' && formData.secretCode !== '2026') {
+      setError('Invalid Admin Secret Code.');
+      return;
     }
+
+    // 2. LocalStorage Persistence
+    // I am simulating a database by saving the user object to the browser's disk.
+    // This allows the login page to "find" this user later.
+    const existingUsers = JSON.parse(localStorage.getItem('walletwise_users') || '[]');
     
-    // Successful registration automatically redirects to the Login page
-    alert(`Successfully registered as a ${formData.role}!`);
+    // I check if the email is already taken to prevent duplicates
+    if (existingUsers.find(u => u.email === formData.email)) {
+      setError('This email is already registered.');
+      return;
+    }
+
+    const newUser = {
+      id: Date.now(),
+      username: formData.username,
+      email: formData.email,
+      password: formData.password, // In production, we would hash this!
+      role: formData.role
+    };
+
+    existingUsers.push(newUser);
+    localStorage.setItem('walletwise_users', JSON.stringify(existingUsers));
+
+    // 3. Success Feedback
+    // Instead of just vanishing, I am now redirecting them so they can log in with their new credentials.
+    alert('Account created successfully! Please log in.');
     navigate('/login');
   };
 
   return (
-    <Grid container sx={{ height: '100vh' }}>
-      
-      {/* LEFT SIDE: WalletWise Teal Branding (Visual consistency) */}
-      <Grid 
-        item 
-        xs={12} 
-        md={6} 
-        sx={{ 
-          backgroundColor: '#0D6E6E',
-          color: 'white',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          p: 4
-        }}
-      >
-        <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 2 }}>
-          WalletWise
-        </Typography>
-        <Typography variant="h6" align="center">
-          Take control of your finances today.
-        </Typography>
-      </Grid>
+    <Grid container component="main" sx={{ height: '100vh', bgcolor: '#F4F7F6' }} justifyContent="center" alignItems="center">
+      <Grid item xs={11} sm={8} md={5} lg={4}>
+        <Card sx={{ p: 4, borderRadius: 4, boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+          <Box sx={{ mb: 3, textAlign: 'center' }}>
+            <Typography variant="h4" fontWeight={900} color="#0D6E6E">Create Account</Typography>
+            <Typography variant="body2" color="text.secondary">Join WalletWise to start tracking</Typography>
+          </Box>
 
-      {/* RIGHT SIDE: Registration Form */}
-      <Grid 
-        item 
-        xs={12} 
-        md={6} 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          backgroundColor: '#f4f6f8' 
-        }}
-      >
-        <Card sx={{ p: 4, width: '100%', maxWidth: 400, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
-            Create Account
-          </Typography>
-          <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-            Join us and start managing your budget.
-          </Typography>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
           <form onSubmit={handleSubmit}>
             <TextField
-              label="Username"
+              label="Full Name"
               name="username"
               fullWidth
               required
@@ -122,25 +104,19 @@ export default function Register() {
               onChange={handleChange}
               sx={{ mb: 2 }}
             />
-
-            {/* 3. CONDITIONAL FORM FIELDS */}
-            {/* Role Selection Dropdown */}
             <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel id="role-select-label">Register As</InputLabel>
+              <InputLabel>Register As</InputLabel>
               <Select
-                labelId="role-select-label"
                 name="role"
                 value={formData.role}
                 label="Register As"
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                onChange={handleChange}
               >
-                <MenuItem value="User">Normal User</MenuItem>
-                <MenuItem value="Admin">Administrator</MenuItem>
+                <MenuItem value="User">Standard User</MenuItem>
+                <MenuItem value="Admin">System Administrator</MenuItem>
               </Select>
             </FormControl>
 
-            {/* Conditional Rendering using Javascript logical && operator. 
-                The text field only mounts into the DOM when role is strictly equal to 'Admin' */}
             {formData.role === 'Admin' && (
               <TextField
                 label="Admin Secret Code"
@@ -151,7 +127,7 @@ export default function Register() {
                 value={formData.secretCode}
                 onChange={handleChange}
                 sx={{ mb: 2 }}
-                helperText="Enter the master code to register as an admin"
+                helperText="Enter '2026' for demonstration purposes"
               />
             )}
 
@@ -160,13 +136,13 @@ export default function Register() {
               variant="contained" 
               fullWidth 
               size="large"
-              sx={{ backgroundColor: '#0D6E6E', '&:hover': { backgroundColor: '#0A5555' }, mb: 2, mt: 1 }}
+              sx={{ bgcolor: '#0D6E6E', '&:hover': { bgcolor: '#0A5555' }, py: 1.5 }}
             >
               Sign Up
             </Button>
           </form>
 
-          <Typography variant="body2" align="center">
+          <Typography variant="body2" align="center" sx={{ mt: 3 }}>
             Already have an account?{' '}
             <Link 
               component="button" 

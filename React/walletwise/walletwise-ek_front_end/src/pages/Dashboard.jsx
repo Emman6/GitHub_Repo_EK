@@ -1,138 +1,92 @@
-import React, { useState } from 'react';
-import { Box, Typography, Card, Grid, MenuItem, Select, FormControl, InputLabel, TextField } from '@mui/material';
-import Chart from 'react-apexcharts';
-import Footer from '../Footer';
+import React from 'react';
+import { Box, Grid, Card, Typography, Stack, Divider, List, ListItem, ListItemText } from '@mui/material';
+import { TrendingUp, TrendingDown, AccountBalanceWallet, History } from '@mui/icons-material';
+import { useFinance } from '../context/FinanceContext'; 
 
 export default function Dashboard() {
-  // STATE MANAGEMENT
-  const [period, setPeriod] = useState('This Month');
-  
-  // Starting with a clean slate of 0 balance
-  const [balance] = useState(0); 
+  const { totalIncome, totalExpense, totalBalance, incomes, expenses } = useFinance();
 
-  const [dateRange, setDateRange] = useState({
-    start: '',
-    end: ''
-  });
-
-  const handleDateChange = (field, value) => {
-    setDateRange((prev) => ({
-      ...prev, 
-      [field]: value 
-    }));
-  };
-
-  // CLEAN STATE: Empty arrays mean the charts will show "No Data" until records are added
-  const incomeSeries = [];
-  const incomeOptions = {
-    labels: [],
-    colors: ['#0D6E6E', '#4CAF50', '#FF9800', '#E91E63'],
-    legend: { position: 'bottom' },
-    noData: { text: 'No income data recorded yet' }
-  };
-
-  const expenseSeries = [];
-  const expenseOptions = {
-    labels: [],
-    colors: ['#C62828', '#FFB300'],
-    legend: { position: 'bottom' },
-    noData: { text: 'No expense data recorded yet' }
-  };
+  // I am combining and sorting recent activities to show on the dashboard
+  const recentActivities = [...incomes, ...expenses]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 5);
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold', color: '#0D6E6E' }}>
-        Financial Dashboard
+      <Typography variant="h4" sx={{ mb: 4, fontWeight: 900, color: '#084D4D' }}>
+        Financial Overview
       </Typography>
 
-      {/* FILTERS SECTION */}
-      <Grid container spacing={2} sx={{ mb: 4 }} alignItems="center">
-        <Grid item xs={12} md={4}>
-          <FormControl fullWidth size="small">
-            <InputLabel>Period</InputLabel>
-            <Select value={period} label="Period" onChange={(e) => setPeriod(e.target.value)}>
-              <MenuItem value="This Week">This Week</MenuItem>
-              <MenuItem value="This Month">This Month</MenuItem>
-              <MenuItem value="Custom">Custom Range</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-
-        {period === 'Custom' && (
-          <>
-            <Grid item xs={6} md={3}>
-              <TextField
-                label="Start Date"
-                type="date"
-                fullWidth
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                value={dateRange.start}
-                onChange={(e) => handleDateChange('start', e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={6} md={3}>
-              <TextField
-                label="End Date"
-                type="date"
-                fullWidth
-                size="small"
-                InputLabelProps={{ shrink: true }}
-                value={dateRange.end}
-                onChange={(e) => handleDateChange('end', e.target.value)}
-              />
-            </Grid>
-          </>
-        )}
-      </Grid>
-
-      {/* SUMMARY CARDS */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
-          <Card sx={{ p: 3, textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Typography variant="subtitle2" color="textSecondary">Current Balance</Typography>
-            <Typography variant="h4" sx={{ mt: 1, fontWeight: 'bold', color: '#0D6E6E' }}>
-              UGX {balance.toLocaleString()}
-            </Typography>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Card sx={{ p: 3, textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Typography variant="subtitle2" color="textSecondary">Total Income</Typography>
-            <Typography variant="h4" sx={{ mt: 1, fontWeight: 'bold', color: '#2E7D32' }}>
-              UGX 0
-            </Typography>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Card sx={{ p: 3, textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Typography variant="subtitle2" color="textSecondary">Total Expenditure</Typography>
-            <Typography variant="h4" sx={{ mt: 1, fontWeight: 'bold', color: '#C62828' }}>
-              UGX 0
-            </Typography>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* CHARTS SECTION */}
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Income by Type</Typography>
-            <Chart options={incomeOptions} series={incomeSeries} type="donut" width="100%" />
+        {/* TOP METRICS */}
+        <Grid item xs={12} md={4}>
+          <Card sx={{ p: 3, borderRadius: 4, bgcolor: '#084D4D', color: 'white', boxShadow: '0 8px 16px rgba(8,77,77,0.2)' }}>
+            <Stack direction="row" justifyContent="space-between">
+              <Box>
+                <Typography variant="subtitle2" sx={{ opacity: 0.8 }}>Current Balance</Typography>
+                <Typography variant="h4" fontWeight={900}>UGX {totalBalance.toLocaleString()}</Typography>
+              </Box>
+              <AccountBalanceWallet sx={{ fontSize: 40, opacity: 0.3 }} />
+            </Stack>
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Expense by Type</Typography>
-            <Chart options={expenseOptions} series={expenseSeries} type="donut" width="100%" />
+        <Grid item xs={12} md={4}>
+          <Card sx={{ p: 3, borderRadius: 4, border: '1px solid #e0e0e0' }}>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Box sx={{ p: 1, bgcolor: '#e8f5e9', borderRadius: 2 }}><TrendingUp sx={{ color: '#2e7d32' }} /></Box>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">Total Income</Typography>
+                <Typography variant="h5" fontWeight={800} color="#2e7d32">+ UGX {totalIncome.toLocaleString()}</Typography>
+              </Box>
+            </Stack>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Card sx={{ p: 3, borderRadius: 4, border: '1px solid #e0e0e0' }}>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Box sx={{ p: 1, bgcolor: '#ffebee', borderRadius: 2 }}><TrendingDown sx={{ color: '#c62828' }} /></Box>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">Total Expenses</Typography>
+                <Typography variant="h5" fontWeight={800} color="#c62828">- UGX {totalExpense.toLocaleString()}</Typography>
+              </Box>
+            </Stack>
+          </Card>
+        </Grid>
+
+        {/* RECENT ACTIVITY SECTION */}
+        <Grid item xs={12}>
+          <Card sx={{ p: 3, borderRadius: 4, border: '1px solid #e0e0e0' }}>
+            <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+              <History color="action" />
+              <Typography variant="h6" fontWeight={700}>Recent Activity</Typography>
+            </Stack>
+            <Divider />
+            <List>
+              {recentActivities.map((item, index) => (
+                <ListItem key={index} divider={index !== recentActivities.length - 1}>
+                  <ListItemText 
+                    primary={item.description || item.source} 
+                    secondary={item.date} 
+                  />
+                  <Typography 
+                    fontWeight={700} 
+                    color={item.spent ? '#c62828' : '#2e7d32'}
+                  >
+                    {item.spent ? '-' : '+'} UGX {(item.spent || item.amount).toLocaleString()}
+                  </Typography>
+                </ListItem>
+              ))}
+              {recentActivities.length === 0 && (
+                <Typography sx={{ py: 2, textAlign: 'center', color: 'text.secondary' }}>
+                  No recent transactions found.
+                </Typography>
+              )}
+            </List>
           </Card>
         </Grid>
       </Grid>
-      <Footer />
     </Box>
   );
 }
