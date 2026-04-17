@@ -3,9 +3,8 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 const FinanceContext = createContext();
 
 export const FinanceProvider = ({ children }) => {
-  // ── INITIAL LOAD ──
-  // I am checking the browser's LocalStorage. If 'walletwise_incomes' exists, I parse it.
-  // Otherwise, I start with an empty array so the facilitator begins with a clean slate.
+  // ── INITIAL LOAD (LOCAL STORAGE) ──
+  // I am initializing all four data arrays from LocalStorage to ensure persistence.
   const [incomes, setIncomes] = useState(() => {
     const saved = localStorage.getItem('walletwise_incomes');
     return saved ? JSON.parse(saved) : [];
@@ -16,9 +15,18 @@ export const FinanceProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [accounts, setAccounts] = useState(() => {
+    const saved = localStorage.getItem('walletwise_accounts');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [debts, setDebts] = useState(() => {
+    const saved = localStorage.getItem('walletwise_debts');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // ── PERSISTENCE ENGINE ──
-  // I use useEffect to watch for changes. Every time an income or expense is added or deleted,
-  // this block runs and updates the browser's storage automatically.
+  // These effects ensure that any change to the state is immediately written to the browser's disk.
   useEffect(() => {
     localStorage.setItem('walletwise_incomes', JSON.stringify(incomes));
   }, [incomes]);
@@ -27,8 +35,15 @@ export const FinanceProvider = ({ children }) => {
     localStorage.setItem('walletwise_expenses', JSON.stringify(expenses));
   }, [expenses]);
 
-  // ── CALCULATIONS ──
-  // I am using useMemo to calculate totals so they update instantly on the Dashboard.
+  useEffect(() => {
+    localStorage.setItem('walletwise_accounts', JSON.stringify(accounts));
+  }, [accounts]);
+
+  useEffect(() => {
+    localStorage.setItem('walletwise_debts', JSON.stringify(debts));
+  }, [debts]);
+
+  // ── GLOBAL CALCULATIONS ──
   const totalIncome = useMemo(() => 
     incomes.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0), [incomes]);
 
@@ -40,15 +55,19 @@ export const FinanceProvider = ({ children }) => {
   // ── SHARED ACTIONS ──
   const addIncome = (data) => setIncomes([...incomes, { ...data, id: Date.now() }]);
   const addExpense = (data) => setExpenses([...expenses, { ...data, id: Date.now() }]);
+  const addAccount = (data) => setAccounts([...accounts, { ...data, id: Date.now() }]);
+  const addDebt = (data) => setDebts([...debts, { ...data, id: Date.now() }]);
   
-  // I added a delete function so the facilitator can manage the list
   const deleteExpense = (id) => setExpenses(expenses.filter(e => e.id !== id));
   const deleteIncome = (id) => setIncomes(incomes.filter(i => i.id !== id));
+  const deleteDebt = (id) => setDebts(debts.filter(d => d.id !== id));
 
   return (
     <FinanceContext.Provider value={{ 
-      incomes, expenses, totalIncome, totalExpense, totalBalance, 
-      addIncome, addExpense, deleteExpense, deleteIncome 
+      incomes, expenses, accounts, debts,
+      totalIncome, totalExpense, totalBalance, 
+      addIncome, addExpense, addAccount, addDebt,
+      deleteExpense, deleteIncome, deleteDebt
     }}>
       {children}
     </FinanceContext.Provider>

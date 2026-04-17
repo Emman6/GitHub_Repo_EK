@@ -1,140 +1,106 @@
 import React, { useState } from 'react';
 import { 
   Box, Typography, Button, Grid, Card, Stack, 
-  IconButton, TextField, InputAdornment, Paper,
+  IconButton, TextField, InputAdornment, 
   Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import SmartphoneIcon from '@mui/icons-material/Smartphone';
-import PaymentsIcon from '@mui/icons-material/Payments';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import SearchIcon from '@mui/icons-material/Search';
+import { AddCircleOutline, AccountBalance, Smartphone, Payments, Search } from '@mui/icons-material';
+import { useFinance } from '../context/FinanceContext'; // Integrated Global State
 
 export default function Accounts() {
-  // I am starting with an empty array so you can add your own real data.
-  const [myAccounts, setMyAccounts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  // ── GLOBAL STATE ──
+  // I am pulling the accounts and the add function from our global provider
+  const { accounts = [], addAccount, incomes, addIncome } = useFinance();
   
-  // I use this state to manage the "Add Account" popup window.
+  const [searchTerm, setSearchTerm] = useState('');
   const [open, setOpen] = useState(false);
   const [newAcc, setNewAcc] = useState({ name: '', type: 'bank', balance: '' });
 
-  // I am creating this function to take your form input and save it to the list.
   const handleSave = () => {
-    const accountToAdd = {
-      id: Date.now(),
+    if (!newAcc.name || !newAcc.balance) return;
+
+    const accountId = Date.now();
+    
+    // 1. Add to the Accounts list
+    addAccount({
+      id: accountId,
       name: newAcc.name,
       type: newAcc.type,
-      balance: parseFloat(newAcc.balance) || 0,
-    };
-    setMyAccounts([...myAccounts, accountToAdd]);
-    setOpen(false); // Close the popup
-    setNewAcc({ name: '', type: 'bank', balance: '' }); // Clear the form
+      balance: parseFloat(newAcc.balance),
+    });
+
+    // 2. Integration: We count the initial balance as a starting 'Income' record
+    // so it shows up in your total balance calculations.
+    addIncome({
+      id: `init-${accountId}`,
+      date: new Date().toISOString().split('T')[0],
+      source: `Initial Deposit: ${newAcc.name}`,
+      amount: parseFloat(newAcc.balance),
+      category: 'Initial Balance'
+    });
+
+    setOpen(false);
+    setNewAcc({ name: '', type: 'bank', balance: '' });
   };
 
-  // I use this helper to decide which icon to show based on the account type.
-  const getIcon = (type) => {
-    switch (type) {
-      case 'bank': return <AccountBalanceIcon sx={{ color: '#084D4D' }} />;
-      case 'mobile': return <SmartphoneIcon sx={{ color: '#084D4D' }} />;
-      default: return <PaymentsIcon sx={{ color: '#084D4D' }} />;
-    }
-  };
-
-  // I am filtering the display list based on what you type in the search bar.
-  const filteredAccounts = myAccounts.filter(acc => 
+  const filteredAccounts = accounts.filter(acc => 
     acc.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
-        <Box>
-          <Typography variant="h4" fontWeight={900} color="#084D4D">My Accounts</Typography>
-          <Typography variant="body2" color="text.secondary">Manage your financial sources</Typography>
-        </Box>
+        <Typography variant="h4" fontWeight={900} color="#084D4D">Financial Sources</Typography>
         <Button 
           variant="contained" 
-          startIcon={<AddCircleOutlineIcon />}
+          startIcon={<AddCircleOutline />} 
           onClick={() => setOpen(true)}
           sx={{ bgcolor: '#084D4D', borderRadius: 2, px: 3 }}
         >
-          Add New Source
+          Add Source
         </Button>
       </Stack>
 
-      <Paper sx={{ p: 1, mb: 4, borderRadius: 3, display: 'flex', alignItems: 'center', bgcolor: '#fcfcfc' }}>
-        <TextField 
-          fullWidth 
-          variant="standard" 
-          placeholder="Search accounts..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{ 
-            disableUnderline: true, 
-            startAdornment: (
-              <InputAdornment position="start" sx={{ ml: 2 }}>
-                <SearchIcon color="disabled" />
-              </InputAdornment>
-            ) 
-          }}
-          sx={{ py: 1 }}
-        />
-      </Paper>
+      <TextField
+        placeholder="Search accounts..."
+        fullWidth
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{ mb: 4, bgcolor: 'white' }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search />
+            </InputAdornment>
+          ),
+        }}
+      />
 
       <Grid container spacing={3}>
         {filteredAccounts.map((acc) => (
           <Grid item xs={12} sm={6} md={4} key={acc.id}>
-            <Card sx={{ p: 3, borderRadius: 4, border: '1px solid rgba(0,0,0,0.05)' }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                <Box sx={{ p: 1.5, bgcolor: '#F4F7F6', borderRadius: 3 }}>
-                  {getIcon(acc.type)}
-                </Box>
-                <IconButton size="small"><MoreVertIcon /></IconButton>
-              </Stack>
-
-              <Box sx={{ mt: 3 }}>
-                <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 700, textTransform: 'uppercase' }}>
-                  {acc.type}
-                </Typography>
-                <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>{acc.name}</Typography>
-                <Typography variant="h5" fontWeight={900} color="#084D4D">
-                  UGX {acc.balance.toLocaleString()}
-                </Typography>
-              </Box>
+            <Card sx={{ p: 3, borderRadius: 4, border: '1px solid #eee' }}>
+              <Typography variant="caption" sx={{ textTransform: 'uppercase', color: 'text.disabled', fontWeight: 700 }}>
+                {acc.type}
+              </Typography>
+              <Typography variant="h6" fontWeight={800}>{acc.name}</Typography>
+              <Typography variant="h5" fontWeight={900} color="#084D4D" mt={1}>
+                UGX {acc.balance.toLocaleString()}
+              </Typography>
             </Card>
           </Grid>
         ))}
-
-        {filteredAccounts.length === 0 && (
-          <Box sx={{ width: '100%', textAlign: 'center', mt: 5, opacity: 0.5 }}>
-            <Typography>No accounts found. Add a source to get started.</Typography>
-          </Box>
-        )}
       </Grid>
 
-      {/* I am adding this Dialog so the user can enter new account data. */}
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Add New Source</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 'bold' }}>Add New Financial Source</DialogTitle>
         <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-          <TextField 
-            label="Account Name" 
-            fullWidth 
-            value={newAcc.name} 
-            onChange={(e) => setNewAcc({...newAcc, name: e.target.value})} 
-          />
-          <TextField 
-            label="Initial Balance" 
-            type="number" 
-            fullWidth 
-            value={newAcc.balance} 
-            onChange={(e) => setNewAcc({...newAcc, balance: e.target.value})} 
-          />
+          <TextField label="Account Name (e.g. Centenary Bank)" fullWidth value={newAcc.name} onChange={(e) => setNewAcc({...newAcc, name: e.target.value})} />
+          <TextField label="Opening Balance" type="number" fullWidth value={newAcc.balance} onChange={(e) => setNewAcc({...newAcc, balance: e.target.value})} />
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 3 }}>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained" sx={{ bgcolor: '#084D4D' }}>Save</Button>
+          <Button onClick={handleSave} variant="contained" sx={{ bgcolor: '#084D4D' }}>Save Account</Button>
         </DialogActions>
       </Dialog>
     </Box>
