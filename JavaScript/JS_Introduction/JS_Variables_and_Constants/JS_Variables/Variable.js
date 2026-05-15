@@ -1,0 +1,1 @@
+let num = 5; //Here created a container called 5 (let means it's contents can change later)

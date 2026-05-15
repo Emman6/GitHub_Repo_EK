@@ -1,0 +1,2 @@
+var age; //this is a container called age, var means it can be accessed anywhere within the function it was scoped in
+let name; //this is a container (let means it can change) called age let means the variable can only be accesss within the block it is scoped in
